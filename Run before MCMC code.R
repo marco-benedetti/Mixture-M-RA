@@ -15,7 +15,8 @@ require(RcppEigen)
 require(spBayes)
 
 # UPDATE PATH #
-sourceCpp("PATH TO SOURCE FOLDER/materncovcode.cpp")
+setwd("C:/Users/benedetm/Desktop/Mixture MRA Code")
+sourceCpp("materncovcode.cpp")
 
 #########################################################################################################
 # THE FOLLOWING PORTION OF THE CODE USES CODE WRITTEN BY MATTHIAS KATZFUSS.                             #
@@ -73,6 +74,7 @@ outer.tp=function(X) {
 # NOTE THAT THIS WILL REORDER YOUR DATA.
 
 partition.2d <- function(J=4,M,domain=c(0,0,1,1),locs,rlat,rlon,z,predlocs=FALSE,zp=NULL){
+  pred=(!is.null(pred.locs)) # do prediction if locs are given (o/w return likelihood)
   
   splitRectangle <- function(rectbounds,Jlon=sqrt(J),Jlat=sqrt(J)){
     blon <- seq(rectbounds[1],rectbounds[3],,Jlon+1)
@@ -168,14 +170,14 @@ partition.2d <- function(J=4,M,domain=c(0,0,1,1),locs,rlat,rlon,z,predlocs=FALSE
       } else pred.locs[[ind]]=knots[[ind]]
     }
   }
-  if(predlocs!=FALSE) return(list(indices=indices,knots=knots,data=data,bounds=bounds,indres=indres,pred.locs=pred.locs,pred.data=pred.data))
+  if(typeof(predlocs)!='logical') return(list(indices=indices,knots=knots,data=data,bounds=bounds,indres=indres,pred.locs=pred.locs,pred.data=pred.data))
   else return(list(indices=indices,knots=knots,data=data,bounds=bounds,indres=indres))
 
 }
 
 # THE FUNCTION get_basis_cpp IS USED TO COMPUTE THE BASIS FUNCTIONS AND THE PRIOR VARIANCE OF THE BASIS FUNCTION WEIGHTS.
 
-# IF YOUR LOCATIONS ARE GIVEN IN  LATITUDE AND LONGITUDE, WE RECOMMEND REPLACING INSTANCES OF THE rdist() FUNCTION
+# IF YOUR LOCATIONS ARE GIVEN IN  LATITUDE AND LONGITUDE, WE STRONGLY RECOMMEND REPLACING INSTANCES OF THE rdist() FUNCTION
 #   WITH THE rdist.earth() FUNCTION.
 
 # CALLING THE get_basis_cpp FUNCTION SHOULD BE PRECEEDED BY THE USE OF THE FUNCTION partition.2d.
@@ -373,7 +375,7 @@ sample_theta_cpp <- function(theta_old,B_old,K_inv_old,eta,y,tau_sq,var_sigma_sq
   return(out)
 }
 
-
+# SAMPLE BASIS FUNCTION WEIGHTS
 sample.eta <- function(R,B,BTB,tau2,K.inv){
   V.eta <- solve(BTB/tau2 + as.matrix(K.inv) + 0.01*diag(nrow(K.inv)))
   M.eta <- (V.eta %*% t(B) %*% R)/tau2
@@ -410,6 +412,8 @@ sample.rho <- function(l.vector,l,rho.old,M,indres,var,a,b){
   return(rho)
 }
 
+# FOR ALL INTENTS AND PURPOSES, THIS FUNCTION SAMPLES THE LATENT BINARY VARIALBE Z_{m,j}.
+# FOR CONVENIENCE, WE SCALE THE OUTPUT IN TERMS OF L, THE CONSTANT WE USE TO SCALE THE VARIANCE OF THE SECOND MIXTURE COMPONENT.
 sample.l <- function(eta,rho,l,K,m){
   log.num <- log(rho^m*dmvnorm(eta,rep(0,length(eta)),K))
   log.den <- log(rho^m*dmvnorm(eta,rep(0,length(eta)),K) + (1-rho^m)*dmvnorm(eta,rep(0,length(eta)),K/l))
@@ -420,6 +424,7 @@ sample.l <- function(eta,rho,l,K,m){
   return(out)
 }
 
+# LARGE SCALE MEAN (IN THE CASE WHERE X IS A VECTOR OF 1'S) OR LINEAR COEFFICIENTS (WHEN X IS A MATRIX OF COVARIATES)
 sample_beta <- function(R,X,XTX,tau2){
   prec_beta <- XTX/tau2
   V_beta <- solve(prec_beta + diag(0.01,nrow(prec_beta)))
@@ -427,6 +432,7 @@ sample_beta <- function(R,X,XTX,tau2){
   return(mvrnorm(1,M_beta,V_beta))
 }
 
+# RESIDUAL VARIANCE
 sample.tau2 <- function(R,prior.shape,prior.rate,N){
   post.shape <- prior.shape+(N/2)
   post.rate <- 0.5*sum((R)^2)+prior.rate
