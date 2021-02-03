@@ -1,4 +1,4 @@
-README for the files in "Mixture MRA Code.zip"
+README for the files in "Mixture M-RA" Folder
 Written by: Marco H. Benedetti
 Last updated: October 31, 2020.
 
