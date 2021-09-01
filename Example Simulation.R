@@ -15,7 +15,7 @@ require(RcppEigen)
 
 
 
-set.seed(42141)
+#set.seed(42141)
 
 # GENERATE LOCATIONS TO COMPUTE INITIAL QUANTITIES
 n <- 500
@@ -38,8 +38,8 @@ n.pred <- nrow(predlocs)
 
 #  NUMBER OF SIMULATIONS, BURNIN, AND ITERATIONS PER SIMULATION.
 numsim <- 1
-burnin <- 10000
-niter <- 20000
+burnin <- 10
+niter <- 20
 
 # NUMBER OF LEVELS PLUS 1, M, AND PARTITIONS PER SUBREGION, J.
 J <- 4
@@ -105,7 +105,7 @@ for(s in 1:numsim){
   y <- y.full[-predind]
   
   
-  quants <- partition.2d(J=4,M=4,domain=c(0,0,1,1),locs,rlat,rlon,y,predlocs,y.pred)
+  quants <- partition.2d(J=4,M=4,domain=c(0,0,1,1),locs,rlat,rlon,y,predlocs=predlocs,y.pred)
   data <- quants$data
   knots <- quants$knots
   indices <- quants$indices
@@ -135,11 +135,11 @@ for(s in 1:numsim){
 
 	
   # INITIAL VALUES FOR THETA AND L
-  theta <- c(1,0.1,1)
+  theta <- c(1,0.05,1)
   l.vector <- rep(1,n.groups)
   
   # COMPUTE PRIOR QUANTITIES
-  prior.quants <- get_basis_cpp(theta,maternCovcpp,data,knots,indices,pred.locs=pred.locs)
+  prior.quants <- get_basis_cpp(theta,maternCovcpp,data,knots,indices,pred.locs=predlocs)
   B.list <- prior.quants[[1]]
   K.list <- prior.quants[[2]]
   Bp.list <- prior.quants[[3]]
@@ -186,6 +186,7 @@ for(s in 1:numsim){
   pred.out <- matrix(0,niter-burnin,n.pred)
   init.w <- rep(0,n)
   acc_rho <- den_rho <- 0
+  var_rho <- 0.1
   var_phi = 0.01
   var_sigma_sq = 0.1
   var_nu = 0.05
@@ -200,6 +201,7 @@ for(s in 1:numsim){
       w <- init.w
       eta <- rep(0,n.groups*rlat*rlon)
       beta <- 0
+      rho <- 0.1
     }
     R_tau2 <- y.new-beta-w 
     new.tau2 <- sample.tau2(R_tau2,0.001,0.001,length(y.new))
@@ -300,3 +302,7 @@ for(s in 1:numsim){
 
   
 }
+
+ 
+plot(y,new,type='l')
+lines(predmean[1,],col=2)
