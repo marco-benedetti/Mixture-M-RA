@@ -2,7 +2,7 @@ README for the files in "Mixture M-RA" Folder
 Written by: Marco H. Benedetti
 Last updated: October 31, 2020.
 
-This file describes the code provided alongside the paper "Identifying regions of inhomogeneities in spatial processes via an M-RA and mixture priors" by Marco H. Benedetti, Veronica J. Berrocal, and Naveen N. Narisetty.
+This README file describes the code provided alongside the paper "Identifying regions of inhomogeneities in spatial processes via an M-RA and mixture priors" by Marco H. Benedetti, Veronica J. Berrocal, and Naveen N. Narisetty.
 
 The code herein is intended to provide users with a straightforward simulation study that allows them to fit the Mixture M-RA to randomly generated spatial data.
 
@@ -20,7 +20,7 @@ In other words we expect that posterior expectations of the latent binary variab
 Files:
 
 1) materncovcode.cpp: This is a cpp script used to compute matern covariance between two points as a function of their distance and a set of covariance function parameters.
-This program takes a distance matrix as as input.  If you use a different covariance function, please note this in the event of any errors.
+This program takes a distance matrix as as input.  If you use a different covariance function, please note in the event of any errors that the inputs must be the same as maternCovcpp.
 
 2) Run before MCMC code.R: This R script contains all functions needed to prepare to run the Mixture M-RA.
 A number of function were written by Matthias Katzfus for the paper "A multi-resolution approximation for massive spatial datasets."
