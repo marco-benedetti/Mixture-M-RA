@@ -15,14 +15,14 @@ require(RcppEigen)
 require(spBayes)
 
 # UPDATE PATH #
-setwd("C:/Users/benedetm/Desktop/Mixture MRA Code")
+setwd("C:/Users/mhb001/Downloads/Mixture-M-RA-master/Mixture-M-RA-master")
 sourceCpp("materncovcode.cpp")
 
-#########################################################################################################
-# THE FOLLOWING PORTION OF THE CODE USES CODE WRITTEN BY MATTHIAS KATZFUSS.                             #
-# IT IS REFERENCED IN THE PAPER "A Multi-Resolution Approximation for Massive Spatial Datasets",        #
-#  WHICH APPEARD IN JASA IN 2017.  HIS CODE IS AVAILABLE AT https://github.com/katzfuss-group/MRA_JASA. #
-#########################################################################################################
+###########################################################################################################
+# THE FOLLOWING PORTION OF THE CODE USES CODE WRITTEN BY MATTHIAS KATZFUSS.                               #
+# IT IS REFERENCED IN THE PAPER "A Multi-Resolution Approximation for Massive Spatial Datasets",          #
+#  WHICH APPEARD IN JASA IN 2017.  THEIR CODE IS AVAILABLE AT https://github.com/katzfuss-group/MRA_JASA. #
+###########################################################################################################
 
 ## return numbered index from tree index (i.e., inverse to indices)
 num.ind=function(tree.ind,J){
@@ -303,7 +303,7 @@ get_basis_cpp <- function(theta,cov.fun,data,knots,indices,pred.locs=NULL){
 
 # IF YOUR MODEL INCLUDES A LARGE SCALE MEAN, MAKE SURE THAT THE INPUT y IS DEFINED 
 #  AS THE DIFFERENCE BETWEEN THE DATA AND THE LARGE-SCALE MEAN
-sample_theta_cpp <- function(theta_old,B_old,K_inv_old,eta,y,tau_sq,var_sigma_sq,var_phi,var_nu,data,knots,indices,pred_locs,earth=FALSE){
+sample_theta_cpp <- function(theta_old,B_old,K_inv_old,eta,y,tau_sq,var_sigma_sq,var_phi,var_nu,data,knots,indices,pred_locs,earth=FALSE,cov.fun){
   
   
   # GENERATE PROPOSAL VALUES #
@@ -337,7 +337,7 @@ sample_theta_cpp <- function(theta_old,B_old,K_inv_old,eta,y,tau_sq,var_sigma_sq
   
   # CREATE PRIOR QUANTS FOR PROPOSAL THETA #
   prop_theta <- c(prop_sigma_sq,prop_phi,prop_nu)
-  prop_quants <- get_basis_cpp(prop_theta,cov.fun=maternCovcpp,data,knots,indices,pred.locs=pred_locs)
+  prop_quants <- get_basis_cpp(prop_theta,cov.fun=cov.fun,data,knots,indices,pred.locs=pred_locs)
   prop_B_list <- prop_quants[[1]]
   prop_B <- prop_B_list[[1]]
   prop_K_inv <- solve(blockdiag(prop_quants[[2]]))
