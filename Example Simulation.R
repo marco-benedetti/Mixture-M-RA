@@ -36,10 +36,16 @@ n <- nrow(locs)
 n.pred <- nrow(predlocs)
 
 
+# USING COMPILED CPP CODE TO COMPUTE MATERN COVARIANCE CAN SPEED UP COMPUTATION
+# THIS CODE WAS WRITTEN USING THE C++ FUNCTION maternCovcpp
+# IF YOU USE A DIFFERENT COVARIANCE FUNCTION, MAKE SURE THE INPUTS ARE THE SAME AS THOSE TAKEN BY maternCovcpp
+
+cov.fun <- maternCovcpp
+
 #  NUMBER OF SIMULATIONS, BURNIN, AND ITERATIONS PER SIMULATION.
 numsim <- 1
-burnin <- 10
-niter <- 20
+burnin <- 10000
+niter <- 20000
 
 # NUMBER OF LEVELS PLUS 1, M, AND PARTITIONS PER SUBREGION, J.
 J <- 4
@@ -93,8 +99,8 @@ for(s in 1:numsim){
   
   # GENERATE DATA ACCORDING TO A MIXTURE OF MULTIVARIATE NORMAL DISTRIBUTIONS.
   
-  w1.s <- mvrnorm(1,rep(0,n.full),maternCovcpp(rdist(locs.full,locs.full),1,1,1))
-  w2.s <- mvrnorm(1,rep(0,n.full),maternCovcpp(rdist(locs.full,locs.full),1,0.01,1))
+  w1.s <- mvrnorm(1,rep(0,n.full),cov.fun(rdist(locs.full,locs.full),1,1,1))
+  w2.s <- mvrnorm(1,rep(0,n.full),cov.fun(rdist(locs.full,locs.full),1,0.01,1))
   
   in.region.1 <- as.numeric(locs.full[,1]<0.5)
   w.s <- in.region.1*w1.s +(1-in.region.1)*w2.s
@@ -136,10 +142,10 @@ for(s in 1:numsim){
 	
   # INITIAL VALUES FOR THETA AND L
   theta <- c(1,0.05,1)
-  l.vector <- rep(1,n.groups)
+  l.vector <- rep(0,n.groups)
   
   # COMPUTE PRIOR QUANTITIES
-  prior.quants <- get_basis_cpp(theta,maternCovcpp,data,knots,indices,pred.locs=predlocs)
+  prior.quants <- get_basis_cpp(theta,cov.fun=cov.fun,data,knots,indices,pred.locs=predlocs)
   B.list <- prior.quants[[1]]
   K.list <- prior.quants[[2]]
   Bp.list <- prior.quants[[3]]
@@ -201,7 +207,7 @@ for(s in 1:numsim){
       w <- init.w
       eta <- rep(0,n.groups*rlat*rlon)
       beta <- 0
-      rho <- 0.1
+      rho <- 0.99
     }
     R_tau2 <- y.new-beta-w 
     new.tau2 <- sample.tau2(R_tau2,0.001,0.001,length(y.new))
@@ -219,8 +225,20 @@ for(s in 1:numsim){
       
       level <- length(indices[[i]])
       prev.ind <- if(level<=1) 1 else num.ind(indices[[i]][1:(level-1)],J)
+	
       l.vector[i] <- if(l.vector[prev.ind]==l) l else sample.l(eta[start:end],rho,l,Klist2[[i]],level)
       
+	if(level < (M-1)){
+		if(i==1){
+			next.inds <- c(2:(J+1))
+		}else{
+			st <- (which(indres[[level+1]]==i)-1)*J+1
+			next.inds <- indres[[level+2]][st:(st+J-1)]
+		}
+		if(sum(as.numeric(l.vector[next.inds]==(rep(0,J)))) > 0){
+			l.vector[i]=0
+		}
+	}
       start <- end+1
 
     }
@@ -232,7 +250,7 @@ for(s in 1:numsim){
     if(new.rho!=rho.old){acc_rho <- acc_rho+1}
     rho <- new.rho
 
-    new.theta <- sample_theta_cpp(theta,B,blockdiag(Kinvlist),eta,y.new-beta,new.tau2,var_sigma_sq,var_phi,var_nu,data,knots,indices,pred.locs)
+    new.theta <- sample_theta_cpp(theta,B,blockdiag(Kinvlist),eta,y.new-beta,new.tau2,var_sigma_sq,var_phi,var_nu,data,knots,indices,pred.locs,cov.fun=cov.fun)
     if(!isTRUE(all.equal(new.theta[[1]],theta))){
       theta <- new.theta[[1]]
       B <- new.theta[[2]]
@@ -304,5 +322,5 @@ for(s in 1:numsim){
 }
 
  
-plot(y,new,type='l')
+plot(yp.new,type='l')
 lines(predmean[1,],col=2)
