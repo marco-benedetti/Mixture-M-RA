@@ -4,9 +4,9 @@ Last updated: October 31, 2020.
 
 This README file describes the code provided alongside the paper "Identifying regions of inhomogeneities in spatial processes via an M-RA and mixture priors" by Marco H. Benedetti, Veronica J. Berrocal, and Naveen N. Narisetty.
 
-The code herein is intended to provide users with a straightforward simulation study that allows them to fit the Mixture M-RA to randomly generated spatial data.
+The code is intended to provide users with a straightforward simulation study that allows them to fit the Mixture M-RA to randomly generated spatial data.
 
-The simulatied data corresponds to Simulation Study 2 in the manuscript, in which data are generated as a realization of a mixture of Gaussian Processes:
+The simulatied data correspond to Simulation Study 2 in the manuscript, in which data are generated as a realization of a mixture of Gaussian Processes:
 In the left portion of the domain, the data are a realization of a Gaussian process with Matern covariance and range parameter equal to 1.  This is a process in which spatial dependence persists at large distances.
 In the right portion of the domain, the data are a realization of a Gaussian process with Matern covariance and range parameter equal to 0.01.  This is a process in which spatial dependence decays rapidly.
 See Figure 2 (a) for an illustration of these data.
@@ -33,5 +33,5 @@ General Notes:
 1) Both R files are documented, and we encourage users to refer to these notes as you run the code.
 2) You can save time by proposing values of phi and nu (the range and smoothness parameters respectively) from a discrete set of proposal values.
 This way, you can pre-compute basis functions before running MCMC, rather than computing new basis functions at each iteration.
-Another approach is to fix the covariance function parameters apriori.  However, we have not looked into this in the course of working on this paper, and cannot speak to how this would effect inference.
+Another approach is to fix the covariance function parameters apriori.  However, we have not looked into this in the course of working on this paper, and cannot speak to how this would affect inference.
 3) Note that calling partition.2d re-orders the data.  Don't use your original data (y) after running partition.2d.  Instead, use y.new, as we have done in Example Simulation.R
